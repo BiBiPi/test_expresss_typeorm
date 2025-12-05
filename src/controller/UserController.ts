@@ -1,52 +1,54 @@
-import { AppDataSource } from "../data-source"
-import { Request } from "express"
-import { User } from "../entity/User"
+import { Request, Response, NextFunction } from 'express'
+import { User } from '../entity/User'
+import { DataSource, Repository } from 'typeorm'
 
 export class UserController {
+    private repository: Repository<User>
 
-    private userRepository = AppDataSource.getRepository(User)
-
-    async all() {
-        return this.userRepository.find()
+    constructor(appDataSource: DataSource) {
+        this.repository = appDataSource.getRepository(User)
     }
 
-    async one(request: Request) {
+    async all(request: Request, response: Response, next: NextFunction) {
+        response.json(await this.repository.find().catch(next))
+    }
+
+    async one(request: Request, response: Response, next: NextFunction) {
         const id = parseInt(request.params.id)
 
-        const user = await this.userRepository.findOne({
-            where: { id }
-        })
+        const user = await this.repository.findOne({
+            where: { id: id }
+        }).catch(next)
 
         if (!user) {
-            return "Unregistered user"
+            return response.status(400).json({ error: 'User' })
         }
 
-        return user
+        response.json(user)
     }
 
-    async save(request: Request) {
-
-        const { name } = request.body;
+    async save(request: Request, response: Response, next: NextFunction) {
+        const { username, password } = request.body;
 
         const user = Object.assign(new User(), {
-            name: name
+            username: username,
+            password: password,
         })
 
-        return this.userRepository.save(user)
+        response.json(await this.repository.save(user).catch(next))
     }
 
-    async remove(request: Request) {
+    async remove(request: Request, response: Response, next: NextFunction) {
         const id = parseInt(request.params.id)
 
-        let userToRemove = await this.userRepository.findOneBy({ id })
+        let userToRemove = await this.repository.findOneBy({ id: id }).catch(next)
 
         if (!userToRemove) {
-            return "This user not exist"
+            return 'User not found'
         }
 
-        await this.userRepository.remove(userToRemove)
+        await this.repository.remove(userToRemove).catch(next)
 
-        return "User has been removed"
+        response.json({ message: 'User has been removed' })
     }
-
 }
