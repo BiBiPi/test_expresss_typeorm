@@ -1,13 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn } from 'typeorm'
 import { User } from './User'
 
-@Entity()
+@Entity({ name: 'posts' })
 export class Post {
 
     @PrimaryGeneratedColumn()
     id: number
 
-    @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE', nullable: false })
+    @ManyToOne(() => User, (user) => user.posts, { onDelete: 'CASCADE', nullable: false })
+    @JoinColumn({ name: 'user_id' })
     user_id: number
 
     @Column()

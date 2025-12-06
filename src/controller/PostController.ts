@@ -11,7 +11,21 @@ export class PostController {
     }
 
     async all(request: Request, response: Response, next: NextFunction) {
-        return response.json(await this.repository.find().catch(next))
+        const page = parseInt(request.params.page)
+        const limit = parseInt(request.params.limit)
+
+        console.log(page, limit)
+
+        try {
+            const posts = await this.repository.createQueryBuilder()
+                .limit(limit)
+                .skip(page * limit)
+                .getMany()
+
+            return response.json(posts)
+        } catch (error: any) {
+            next(error)
+        }
     }
 
     async save(request: RequestWithUser, response: Response, next: NextFunction) {
@@ -30,7 +44,7 @@ export class PostController {
 
     async edit(request: RequestWithUser, response: Response, next: NextFunction) {
         const { id, title, content } = request.body as Omit<Post, 'created_at' | 'updated_at' | 'user_id'>;
-        
+
         const isUpdate = await this.repository.update({ id: id, user_id: request.user_id! }, { title: title, content: content }).catch(next)
         if (isUpdate) {
             return response.json({ message: 'Post has been edit' })

@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm'
 import { Post } from './Post'
 
-@Entity()
+@Entity({ name: 'users' })
 export class User {
 
     @PrimaryGeneratedColumn()
@@ -20,6 +20,6 @@ export class User {
     updated_at: Date
 
     @OneToMany(() => Post, (post) => post.user_id)
-    post: Post[];
+    posts: Post[];
 
 }

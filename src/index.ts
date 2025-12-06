@@ -36,7 +36,7 @@ AppDataSource.initialize().then(async (appDataSource) => {
     // __ Register users routes __
 
     const userConstroller = new UserController(appDataSource);
-
+    
     app.post('/sigin', userConstroller.signIn.bind(userConstroller))
     app.post('/users', userConstroller.save.bind(userConstroller))
     app.delete('/users/:id', userConstroller.remove.bind(userConstroller))
@@ -45,7 +45,7 @@ AppDataSource.initialize().then(async (appDataSource) => {
 
     const postConstroller = new PostController(appDataSource);
 
-    app.get('/posts', postConstroller.all.bind(postConstroller))
+    app.get('/posts/:page/:limit', postConstroller.all.bind(postConstroller))
     app.put('/posts', auth, postConstroller.save.bind(postConstroller))
     app.delete('/posts/:id', auth, postConstroller.remove.bind(postConstroller))
 

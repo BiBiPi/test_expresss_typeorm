@@ -43,6 +43,10 @@ curl localhost:3000/posts \
     --header 'Content-Type: application/json'
 ```
 
+```bash
+curl localhost:3000/posts/:page/:limit'
+```
+
 ##### Весь API:
 
 ```
@@ -50,7 +54,7 @@ POST    /signin < payload: { username: string, password: string }
 POST    /users < payload: { username: string, password: string } - create user
 DELETE  /users/:id
 
-GET     /posts
+GET     /posts/:page/:limit
 PUT     /posts < payload: { title: string, content: string, access_token: string }
 DELETE  /posts/:id
 ```
@@ -58,17 +62,17 @@ DELETE  /posts/:id
 ##### Схема таблиц:
 
 ```sql
-CREATE TABLE user (
-  id integer PRIMARY KEY,
-  name varchar,
+create table users (
+  id integer primary key,
+  name varchar unique,
   password integer,
   created_at timestamp,
   updated_at timestamp
 );
 
-CREATE TABLE post (
-  id integer PRIMARY KEY,
-  user_id integer FOREIGN KEY,
+create table posts (
+  id integer primary key,
+  user_id integer foreign key,
   title text,
   contetn text,
   created_at timestamp,
