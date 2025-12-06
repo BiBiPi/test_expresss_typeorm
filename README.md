@@ -4,7 +4,7 @@
 
 Для запуска `docker compose up --build` - будет запущена база и сервер.
 
-Запуск базы в докере:
+##### Запуск базы в докере:
 
 ```bash
 docker run --name mariadb -e MARIADB_ROOT_PASSWORD=root -e MARIADB_DATABASE=test_db -e MARIADB_USER=user -e MARIADB_PASSWORD=root -p 3306:3306 -d mariadb
@@ -19,7 +19,7 @@ curl localhost:3000/users \
     --header 'Content-Type: application/json'
 ```
 
-Вход, проверка и токен:
+##### Вход, проверка и токен:
 
 ```bash
 curl localhost:3000/signin \
@@ -43,8 +43,10 @@ curl localhost:3000/posts \
     --header 'Content-Type: application/json'
 ```
 
+##### Получть посты с пагинацией:
+
 ```bash
-curl localhost:3000/posts/:page/:limit'
+curl localhost:3000/posts/:page/:limit
 ```
 
 ##### Весь API:
