@@ -3,6 +3,8 @@ import { Request, Response } from 'express'
 import { AppDataSource } from './data-source'
 import { UserController } from './controller/UserController'
 import { PostController } from './controller/PostController'
+import * as jwt from 'jsonwebtoken';
+import RequestWithUser from './types'
 
 AppDataSource.initialize().then(async (appDataSource) => {
 
@@ -11,21 +13,32 @@ AppDataSource.initialize().then(async (appDataSource) => {
     const app = express()
     app.use(express.json())
 
-    // __ Register none autorization route __
-
-
     // __ Middleware authorization __
 
-    app.use((request: Request, response: Response, next: Function) => {
-       next()
-    })
+    const auth = (request: RequestWithUser, response: Response, next: Function) => {
+        const token = request.body.access_token
+
+        if (!token) {
+            return response.sendStatus(403)
+        }
+
+        const isAccess = jwt.verify(token, process.env.SECRET ?? 'TEST APP!!!')
+
+        if (isAccess) {
+            const payload = jwt.decode(token) as { id: number }
+            request.user_id = payload.id
+            next()
+        } else {
+            return response.sendStatus(403)
+        }
+    }
 
     // __ Register users routes __
 
     const userConstroller = new UserController(appDataSource);
 
-    app.get('/users/:id', userConstroller.one.bind(userConstroller))
-    app.put('/users', userConstroller.save.bind(userConstroller))
+    app.post('/sigin', userConstroller.signIn.bind(userConstroller))
+    app.post('/users', userConstroller.save.bind(userConstroller))
     app.delete('/users/:id', userConstroller.remove.bind(userConstroller))
 
     // __ Register post routes __
@@ -33,27 +46,25 @@ AppDataSource.initialize().then(async (appDataSource) => {
     const postConstroller = new PostController(appDataSource);
 
     app.get('/posts', postConstroller.all.bind(postConstroller))
-    app.get('/posts/:id', postConstroller.one.bind(postConstroller))
-    app.put('/posts', postConstroller.save.bind(postConstroller))
-    app.put('/posts/user/:user_id', postConstroller.byUser.bind(postConstroller))
-    app.delete('/posts/:id', postConstroller.remove.bind(postConstroller))
+    app.put('/posts', auth, postConstroller.save.bind(postConstroller))
+    app.delete('/posts/:id', auth, postConstroller.remove.bind(postConstroller))
 
-    
     // __ Errors from MariaDB __
-    
+
     app.use((error: any, request: Request, response: Response, next: Function) => {
         if (error.code === 'ER_DUP_ENTRY') {
-            response.status(400).json({ message: 'Already exists' })
+            return response.status(400).json({ message: 'Already exists' })
         } else if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
-            response.status(400).json({ message: 'Incorrect format' })
+            return response.status(400).json({ message: 'Incorrect format' })
         } else if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-            response.status(400).json({ message: 'Reference not found' })
+            return response.status(400).json({ message: 'Reference not found' })
         } else {
             console.error(`[${+new Date()}] ${error.message}`)
-            response.status(400).json({ message: 'Bad gateway' })
+            return response.status(400).json({ message: 'Bad gateway' })
         }
-    })
 
+        next()
+    })
 
     app.listen(3000)
 
@@ -67,4 +78,3 @@ process.on('SIGINT', async () => {
     AppDataSource.destroy()
     process.exit(0);
 });
-

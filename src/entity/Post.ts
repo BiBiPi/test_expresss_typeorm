@@ -7,7 +7,7 @@ export class Post {
     @PrimaryGeneratedColumn()
     id: number
 
-    @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE', nullable: false })
     user_id: number
 
     @Column()
@@ -16,10 +16,10 @@ export class Post {
     @Column()
     content: string
 
-    @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date
+    @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    created_at: Date
 
-    @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-    updatedAt: Date
+    @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updated_at: Date
 
 }

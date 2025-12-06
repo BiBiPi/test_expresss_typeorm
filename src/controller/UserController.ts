@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { User } from '../entity/User'
 import { DataSource, Repository } from 'typeorm'
+import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
 
 export class UserController {
     private repository: Repository<User>
@@ -9,33 +11,42 @@ export class UserController {
         this.repository = appDataSource.getRepository(User)
     }
 
-    async all(request: Request, response: Response, next: NextFunction) {
-        response.json(await this.repository.find().catch(next))
-    }
-
-    async one(request: Request, response: Response, next: NextFunction) {
-        const id = parseInt(request.params.id)
+    async signIn(request: Request, response: Response, next: NextFunction) {
+        const { username, password } = request.body as Pick<User, 'username' | 'password'>;
 
         const user = await this.repository.findOne({
-            where: { id: id }
+            where: { username: username }
         }).catch(next)
 
         if (!user) {
-            return response.status(400).json({ error: 'User' })
+            return response.status(403)
         }
 
-        response.json(user)
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return response.status(403)
+        }
+
+        const token = jwt.sign({ id: user.id }, process.env.SECRET ?? 'TEST APP!!!', { expiresIn: '7d' })
+        return response.json({ access_token: token })
     }
 
     async save(request: Request, response: Response, next: NextFunction) {
-        const { username, password } = request.body;
+        const { username, password } = request.body as Pick<User, 'username' | 'password'>;
 
-        const user = Object.assign(new User(), {
-            username: username,
-            password: password,
-        })
+        const salt = await bcrypt.genSalt();
+        const hashPass = await bcrypt.hash(password, salt);
 
-        response.json(await this.repository.save(user).catch(next))
+        const newUser = new User()
+        newUser.username = username
+        newUser.password = hashPass
+
+        const user = await this.repository.save(newUser).catch(next)
+        if (user) {
+            const token = jwt.sign({ id: user.id }, process.env.SECRET ?? 'TEST APP!!!', { expiresIn: '7d' })
+            return response.json({ access_token: token })
+        }
     }
 
     async remove(request: Request, response: Response, next: NextFunction) {
@@ -47,8 +58,9 @@ export class UserController {
             return 'User not found'
         }
 
-        await this.repository.remove(userToRemove).catch(next)
-
-        response.json({ message: 'User has been removed' })
+        const isDelete = await this.repository.remove(userToRemove).catch(next)
+        if (isDelete) {
+            return response.json({ message: 'User has been removed' })
+        }
     }
 }
