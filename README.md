@@ -1,6 +1,6 @@
 ## Тестовое задание
 
-> _Стек TypeScript + Express + TypeORM + MariaDB._
+> _Стек TypeScript + Express + TypeORM + MariaDB + JWT._
 
 Для запуска `docker compose up --build` - будет запущена база и сервер.
 
