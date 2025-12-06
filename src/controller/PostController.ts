@@ -28,10 +28,10 @@ export class PostController {
         }
     }
 
-    async edit(request: Request, response: Response, next: NextFunction) {
-        const post = request.body as Partial<Post>;
-
-        const isUpdate = await this.repository.update({ id: post.id }, post).catch(next)
+    async edit(request: RequestWithUser, response: Response, next: NextFunction) {
+        const { id, title, content } = request.body as Omit<Post, 'created_at' | 'updated_at' | 'user_id'>;
+        
+        const isUpdate = await this.repository.update({ id: id, user_id: request.user_id! }, { title: title, content: content }).catch(next)
         if (isUpdate) {
             return response.json({ message: 'Post has been edit' })
         }
